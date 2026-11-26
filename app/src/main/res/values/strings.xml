@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">CarePulse Doctor</string>
+    <string name="greeting_hello">Hello,</string>
+    <string name="search_doctor_hint">Search Doctor</string>
+    <string name="section_upcoming_appointment">Upcoming Appointment</string>
+    <string name="section_my_recent_visit">My Recent Visit</string>
+    <string name="section_my_checkup_schedule">My Checkup Schedule</string>
+    <string name="section_recommend_doctor">Recommend Doctor</string>
+    <string name="action_see_all">See All</string>
+    <string name="action_book_now">Book Now</string>
+    <string name="action_visit_now">Visit Now</string>
+    <string name="title_my_treatment">My Treatment</string>
+    <string name="title_prescriptions">My Medications</string>
+    <string name="title_clinics">Partner Clinics</string>
+    <string name="title_profile">My Profile</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_treat">Treat</string>
+    <string name="nav_meds">Meds</string>
+    <string name="nav_clinic">Clinic</string>
+    <string name="nav_profile">Profile</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_more_options">More options</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_call_doctor">Start video consultation</string>
+    <string name="cd_end_call">End call</string>
+    <string name="cd_toggle_mic">Toggle microphone</string>
+    <string name="cd_toggle_speaker">Toggle speaker</string>
+    <string name="cd_toggle_camera">Toggle camera</string>
+    <string name="cd_share_screen">Share medical record</string>
+</resources>

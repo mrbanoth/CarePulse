@@ -1,0 +1,6 @@
+{
+  "name": "CarePulse Doctor",
+  "description": "A modern telemedicine and doctor appointment Android app featuring home care overview, real-time mock doctor discovery, treatment plans, checkup schedules, prescriptions, clinics, and live video consultations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
