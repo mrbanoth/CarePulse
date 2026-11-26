@@ -33,6 +33,7 @@ data class Doctor(
   val hospitalName: String,
   val consultationFeeUsd: Int,
   val bio: String,
+  val avatarUrl: String,
   @DrawableRes val avatarRes: Int,
   val isOnline: Boolean,
   val nextAvailableSlot: String,
@@ -49,7 +50,9 @@ data class Appointment(
   val dateLabel: String,
   val timeRange: String,
   val type: ConsultationType,
+  val doctorAvatarUrl: String,
   @DrawableRes val doctorAvatarRes: Int,
+  val liveStatusLabel: String = "Confirmed",
 )
 
 data class CheckupSchedule(
@@ -59,6 +62,7 @@ data class CheckupSchedule(
   val title: String,
   val doctorId: String,
   val doctorShortName: String,
+  val doctorAvatarUrl: String,
   @DrawableRes val doctorAvatarRes: Int,
   val type: ConsultationType,
   val location: String,
@@ -83,6 +87,7 @@ data class PatientProfile(
   val heightLabel: String,
   val bloodType: String,
   val isPro: Boolean,
+  val avatarUrl: String,
   @DrawableRes val avatarRes: Int,
   val treatmentPlans: List<TreatmentPlan>,
 )

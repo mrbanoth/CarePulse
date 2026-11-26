@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,10 +11,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -30,6 +33,7 @@ import androidx.compose.material.icons.rounded.AccessTime
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -60,6 +64,7 @@ import com.example.ui.components.SectionHeaderRow
 import com.example.ui.components.SpecialtyTileCard
 import com.example.ui.state.DoctorAppUiState
 import com.example.ui.theme.AmberBadge
+import com.example.ui.theme.EmeraldLive
 import com.example.ui.theme.IndigoAppointmentOverlay
 import com.example.ui.theme.IndigoPrimary
 import com.example.ui.theme.InkPrimary
@@ -82,10 +87,11 @@ fun HomeScreen(
 ) {
   val homeProfile = uiState.homeProfile
   val isFiltering = uiState.searchQuery.isNotBlank() || uiState.selectedSpecialtyId != null
+  val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
   LazyColumn(
     modifier = modifier.fillMaxSize().statusBarsPadding(),
-    contentPadding = PaddingValues(top = 14.dp, bottom = 108.dp),
+    contentPadding = PaddingValues(top = 14.dp, bottom = 104.dp + navBottomInset),
     verticalArrangement = Arrangement.spacedBy(18.dp),
   ) {
     // 1. Greeting Header + Notification/Profile Pill
@@ -119,11 +125,11 @@ fun HomeScreen(
           Row(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
           ) {
             Box(
               modifier =
-                Modifier.size(38.dp)
+                Modifier.size(40.dp)
                   .clip(CircleShape)
                   .clickable(onClick = onNotificationsClick)
                   .testTag("home_notification_button"),
@@ -139,7 +145,7 @@ fun HomeScreen(
                 Box(
                   modifier =
                     Modifier.align(Alignment.TopEnd)
-                      .padding(top = 7.dp, end = 8.dp)
+                      .padding(top = 8.dp, end = 8.dp)
                       .size(8.dp)
                       .clip(CircleShape)
                       .background(AmberBadge)
@@ -151,20 +157,21 @@ fun HomeScreen(
             Box(
               modifier =
                 Modifier.clickable(onClick = onProfileClick)
+                  .padding(bottom = 2.dp)
                   .testTag("home_profile_avatar"),
               contentAlignment = Alignment.BottomCenter,
             ) {
               AvatarCircle(
-                avatarRes = homeProfile?.avatarRes ?: R.drawable.img_doc_male_neuro,
+                imageUrl = homeProfile?.avatarUrl,
+                avatarRes = homeProfile?.avatarRes ?: R.drawable.img_patient_avatar,
                 contentDescription = homeProfile?.displayName ?: "Profile",
                 size = 42.dp,
               )
               if (homeProfile?.isPro == true) {
                 Surface(
-                  modifier = Modifier.offset(y = 4.dp),
                   shape = RoundedCornerShape(50),
                   color = Color(0xFFDCD9E8),
-                  border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
+                  border = BorderStroke(1.dp, Color.White),
                 ) {
                   Text(
                     text = "PRO",
@@ -241,7 +248,7 @@ fun HomeScreen(
       }
     }
 
-    // Optional filtered results block when user searches or selects a specialty
+    // Filtered results block when user searches or selects a specialty
     item {
       AnimatedVisibility(visible = isFiltering) {
         Column(
@@ -309,6 +316,7 @@ fun HomeScreen(
           UpcomingAppointmentIndigoCard(
             appointment = upcoming,
             onClick = { onAppointmentClick(upcoming) },
+            onQuickVideoClick = { onStartVideoCall(upcoming.doctorId) },
           )
         } else {
           Surface(
@@ -379,6 +387,7 @@ fun HomeScreen(
 private fun UpcomingAppointmentIndigoCard(
   appointment: Appointment,
   onClick: () -> Unit,
+  onQuickVideoClick: () -> Unit,
 ) {
   Surface(
     onClick = onClick,
@@ -390,6 +399,7 @@ private fun UpcomingAppointmentIndigoCard(
     Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
         AvatarCircle(
+          imageUrl = appointment.doctorAvatarUrl,
           avatarRes = appointment.doctorAvatarRes,
           contentDescription = appointment.doctorName,
           size = 52.dp,
@@ -397,13 +407,20 @@ private fun UpcomingAppointmentIndigoCard(
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-          Text(
-            text = appointment.doctorName,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color.White,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-          )
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+              text = appointment.doctorName,
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = Color.White,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis,
+              modifier = Modifier.weight(1f, fill = false),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Box(
+              modifier = Modifier.size(7.dp).clip(CircleShape).background(EmeraldLive),
+            )
+          }
           Spacer(modifier = Modifier.height(2.dp))
           Text(
             text = appointment.subtitle,
@@ -412,6 +429,22 @@ private fun UpcomingAppointmentIndigoCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Surface(
+          onClick = onQuickVideoClick,
+          modifier = Modifier.size(40.dp).testTag("upcoming_quick_video_button"),
+          shape = CircleShape,
+          color = Color.White.copy(alpha = 0.18f),
+        ) {
+          Box(contentAlignment = Alignment.Center) {
+            Icon(
+              imageVector = Icons.Rounded.Videocam,
+              contentDescription = stringResource(R.string.cd_call_doctor),
+              tint = Color.White,
+              modifier = Modifier.size(20.dp),
+            )
+          }
         }
       }
 

@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,9 +7,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -42,9 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,6 +54,7 @@ import com.example.R
 import com.example.data.mock.CheckupSchedule
 import com.example.data.mock.Doctor
 import com.example.ui.components.AvatarCircle
+import com.example.ui.components.RealTimePortraitImage
 import com.example.ui.components.RecommendDoctorCard
 import com.example.ui.components.SectionHeaderRow
 import com.example.ui.components.TopBarWithBackAndMore
@@ -79,10 +80,11 @@ fun TreatmentScreen(
 ) {
   val patient = uiState.treatmentPatient
   var showMoreMenu by remember { mutableStateOf(false) }
+  val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
   LazyColumn(
     modifier = modifier.fillMaxSize().statusBarsPadding(),
-    contentPadding = PaddingValues(top = 12.dp, bottom = 108.dp),
+    contentPadding = PaddingValues(top = 12.dp, bottom = 104.dp + navBottomInset),
     verticalArrangement = Arrangement.spacedBy(20.dp),
   ) {
     // 1. Top App Bar
@@ -158,7 +160,7 @@ fun TreatmentScreen(
             Spacer(modifier = Modifier.height(14.dp))
             Button(
               onClick = onOpenTreatmentPlans,
-              modifier = Modifier.height(38.dp).testTag("treatment_plans_button"),
+              modifier = Modifier.height(40.dp).testTag("treatment_plans_button"),
               shape = RoundedCornerShape(50),
               colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary, contentColor = Color.White),
               contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
@@ -178,10 +180,10 @@ fun TreatmentScreen(
                 .clip(RoundedCornerShape(18.dp))
                 .background(Color(0xFFF3F1F7)),
           ) {
-            Image(
-              painter = painterResource(patient?.avatarRes ?: R.drawable.img_patient_avatar),
+            RealTimePortraitImage(
+              imageUrl = patient?.avatarUrl,
+              fallbackRes = patient?.avatarRes ?: R.drawable.img_patient_avatar,
               contentDescription = patient?.displayName ?: "Patient",
-              contentScale = ContentScale.Crop,
               modifier = Modifier.fillMaxSize(),
             )
           }
@@ -309,6 +311,7 @@ private fun CheckupScheduleCard(
             verticalAlignment = Alignment.CenterVertically,
           ) {
             AvatarCircle(
+              imageUrl = checkup.doctorAvatarUrl,
               avatarRes = checkup.doctorAvatarRes,
               contentDescription = checkup.doctorShortName,
               size = 24.dp,
@@ -328,7 +331,7 @@ private fun CheckupScheduleCard(
 
         Surface(
           onClick = onCallClick,
-          modifier = Modifier.size(34.dp).minimumInteractiveComponentSize().testTag("checkup_call_${checkup.id}"),
+          modifier = Modifier.size(36.dp).minimumInteractiveComponentSize().testTag("checkup_call_${checkup.id}"),
           shape = CircleShape,
           color = IndigoPrimary,
         ) {

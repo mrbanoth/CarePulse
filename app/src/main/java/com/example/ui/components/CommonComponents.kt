@@ -1,24 +1,27 @@
 package com.example.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,8 +32,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Apartment
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.MedicalServices
+import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.CalendarMonth
@@ -43,12 +46,14 @@ import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +65,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,6 +74,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.R
 import com.example.data.mock.Doctor
 import com.example.data.mock.SpecialtyCategory
@@ -94,54 +102,119 @@ enum class BottomNavTab(
 }
 
 @Composable
+fun RealTimePortraitImage(
+  imageUrl: String?,
+  @DrawableRes fallbackRes: Int,
+  contentDescription: String,
+  modifier: Modifier = Modifier,
+  contentScale: ContentScale = ContentScale.Crop,
+) {
+  val context = LocalContext.current
+  val fallbackPainter = painterResource(fallbackRes)
+  AsyncImage(
+    model =
+      ImageRequest.Builder(context)
+        .data(imageUrl?.takeIf { it.isNotBlank() } ?: fallbackRes)
+        .crossfade(true)
+        .build(),
+    contentDescription = contentDescription,
+    placeholder = fallbackPainter,
+    error = fallbackPainter,
+    fallback = fallbackPainter,
+    contentScale = contentScale,
+    modifier = modifier,
+  )
+}
+
+@Composable
+fun AvatarCircle(
+  imageUrl: String?,
+  @DrawableRes avatarRes: Int,
+  contentDescription: String,
+  size: Dp,
+  modifier: Modifier = Modifier,
+) {
+  RealTimePortraitImage(
+    imageUrl = imageUrl,
+    fallbackRes = avatarRes,
+    contentDescription = contentDescription,
+    modifier = modifier.size(size).clip(CircleShape),
+  )
+}
+
+@Composable
 fun FloatingBottomNavBar(
   selectedTab: BottomNavTab,
   onSelectTab: (BottomNavTab) -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  // Docked flush to the bottom screen edge so background extends behind system navigation bar,
+  // while inner Row applies navigationBarsPadding() so touch targets never touch/clip the nav bar.
   Surface(
-    modifier = modifier.fillMaxWidth().navigationBarsPadding(),
+    modifier = modifier.fillMaxWidth(),
     color = MaterialTheme.colorScheme.surface,
-    shadowElevation = 14.dp,
+    shadowElevation = 18.dp,
     tonalElevation = 2.dp,
-    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
   ) {
-    Row(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      BottomNavTab.entries.forEach { tab ->
-        val isSelected = tab == selectedTab
-        Box(
-          modifier =
-            Modifier.testTag(tab.testTag)
-              .minimumInteractiveComponentSize()
-              .clip(RoundedCornerShape(50))
-              .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-              .clickable { onSelectTab(tab) }
-              .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
-              .padding(horizontal = if (isSelected) 16.dp else 12.dp, vertical = 10.dp),
-          contentAlignment = Alignment.Center,
-        ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-          ) {
-            Icon(
-              imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
-              contentDescription = stringResource(tab.labelRes),
-              tint = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-              modifier = Modifier.size(22.dp),
+    Column(modifier = Modifier.fillMaxWidth()) {
+      HorizontalDivider(
+        thickness = 0.75.dp,
+        color = SubtleOutline.copy(alpha = 0.75f),
+      )
+      Row(
+        modifier =
+          Modifier.fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        BottomNavTab.entries.forEach { tab ->
+          val isSelected = tab == selectedTab
+          val pillColor by
+            animateColorAsState(
+              targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+              label = "nav_pill_bg",
             )
-            if (isSelected) {
-              Spacer(modifier = Modifier.width(6.dp))
-              Text(
-                text = stringResource(tab.labelRes),
-                color = Color.White,
-                style = MaterialTheme.typography.labelLarge,
-                maxLines = 1,
+          val iconTint by
+            animateColorAsState(
+              targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+              label = "nav_icon_tint",
+            )
+
+          Box(
+            modifier =
+              Modifier.testTag(tab.testTag)
+                .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                .heightIn(min = 48.dp)
+                .clip(RoundedCornerShape(50))
+                .background(pillColor)
+                .clickable { onSelectTab(tab) }
+                .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
+                .padding(horizontal = if (isSelected) 16.dp else 12.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center,
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.Center,
+            ) {
+              Icon(
+                imageVector = if (isSelected) tab.activeIcon else tab.inactiveIcon,
+                contentDescription = stringResource(tab.labelRes),
+                tint = iconTint,
+                modifier = Modifier.size(22.dp),
               )
+              if (isSelected) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                  text = stringResource(tab.labelRes),
+                  color = Color.White,
+                  style = MaterialTheme.typography.labelLarge,
+                  maxLines = 1,
+                  softWrap = false,
+                )
+              }
             }
           }
         }
@@ -239,7 +312,7 @@ fun SectionHeaderRow(
           Modifier.testTag(testTag)
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onActionClick)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
       )
     }
   }
@@ -293,7 +366,6 @@ fun SpecialtyVectorArt(
     val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
     when (iconType) {
       SpecialtyIconType.NEUROLOGY -> {
-        // Stylized dual-hemisphere brain outline
         drawOval(
           color = accentColor.copy(alpha = 0.22f),
           topLeft = Offset(w * 0.12f, h * 0.16f),
@@ -330,7 +402,6 @@ fun SpecialtyVectorArt(
         }
         drawPath(heartPath, color = accentColor.copy(alpha = 0.24f))
         drawPath(heartPath, color = accentColor, style = stroke)
-        // Pulse wave
         val pulse = Path().apply {
           moveTo(w * 0.26f, h * 0.50f)
           lineTo(w * 0.40f, h * 0.50f)
@@ -342,14 +413,12 @@ fun SpecialtyVectorArt(
         drawPath(pulse, color = accentColor, style = Stroke(width = w * 0.065f, cap = StrokeCap.Round, join = StrokeJoin.Round))
       }
       SpecialtyIconType.ORTHOPEDICS -> {
-        // Stylized joint / bone icon
         drawLine(accentColor, Offset(w * 0.32f, h * 0.16f), Offset(w * 0.52f, h * 0.44f), strokeWidth = w * 0.13f, cap = StrokeCap.Round)
         drawLine(accentColor, Offset(w * 0.52f, h * 0.56f), Offset(w * 0.66f, h * 0.84f), strokeWidth = w * 0.13f, cap = StrokeCap.Round)
         drawCircle(accentColor.copy(alpha = 0.28f), radius = w * 0.18f, center = Offset(w * 0.52f, h * 0.50f))
         drawCircle(accentColor, radius = w * 0.13f, center = Offset(w * 0.52f, h * 0.50f), style = stroke)
       }
       SpecialtyIconType.PULMONOLOGY -> {
-        // Trachea + lungs
         drawLine(accentColor, Offset(w * 0.5f, h * 0.14f), Offset(w * 0.5f, h * 0.44f), strokeWidth = w * 0.08f, cap = StrokeCap.Round)
         drawOval(accentColor.copy(alpha = 0.24f), Offset(w * 0.14f, h * 0.32f), androidx.compose.ui.geometry.Size(w * 0.30f, h * 0.52f))
         drawOval(accentColor.copy(alpha = 0.24f), Offset(w * 0.56f, h * 0.32f), androidx.compose.ui.geometry.Size(w * 0.30f, h * 0.52f))
@@ -357,7 +426,6 @@ fun SpecialtyVectorArt(
         drawOval(accentColor, Offset(w * 0.56f, h * 0.32f), androidx.compose.ui.geometry.Size(w * 0.30f, h * 0.52f), style = stroke)
       }
       SpecialtyIconType.PODIATRY -> {
-        // Stylized medical cross + arch
         drawCircle(accentColor.copy(alpha = 0.20f), radius = w * 0.38f, center = Offset(w * 0.5f, h * 0.5f))
         drawLine(accentColor, Offset(w * 0.5f, h * 0.28f), Offset(w * 0.5f, h * 0.72f), strokeWidth = w * 0.12f, cap = StrokeCap.Round)
         drawLine(accentColor, Offset(w * 0.28f, h * 0.5f), Offset(w * 0.72f, h * 0.5f), strokeWidth = w * 0.12f, cap = StrokeCap.Round)
@@ -376,7 +444,7 @@ fun RecentDoctorHorizontalCard(
 ) {
   Surface(
     onClick = onCardClick,
-    modifier = modifier.width(292.dp).height(164.dp).testTag("recent_doctor_card_${doctor.id}"),
+    modifier = modifier.width(296.dp).height(166.dp).testTag("recent_doctor_card_${doctor.id}"),
     shape = RoundedCornerShape(22.dp),
     color = MaterialTheme.colorScheme.surface,
     shadowElevation = 2.dp,
@@ -392,10 +460,10 @@ fun RecentDoctorHorizontalCard(
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFF3F1F7)),
       ) {
-        Image(
-          painter = painterResource(doctor.avatarRes),
+        RealTimePortraitImage(
+          imageUrl = doctor.avatarUrl,
+          fallbackRes = doctor.avatarRes,
           contentDescription = doctor.name,
-          contentScale = ContentScale.Crop,
           modifier = Modifier.fillMaxSize(),
         )
         if (doctor.isOnline) {
@@ -417,7 +485,7 @@ fun RecentDoctorHorizontalCard(
         modifier = Modifier.fillMaxHeight().weight(1f),
         verticalArrangement = Arrangement.SpaceBetween,
       ) {
-        Column(modifier = Modifier.padding(top = 4.dp)) {
+        Column(modifier = Modifier.padding(top = 2.dp)) {
           Text(
             text = doctor.name,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -447,7 +515,7 @@ fun RecentDoctorHorizontalCard(
         ) {
           Surface(
             onClick = onBookNowClick,
-            modifier = Modifier.height(38.dp).testTag("book_now_${doctor.id}"),
+            modifier = Modifier.height(40.dp).testTag("book_now_${doctor.id}"),
             shape = RoundedCornerShape(50),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, SubtleOutline),
@@ -473,7 +541,7 @@ fun RecentDoctorHorizontalCard(
 
           Surface(
             onClick = onCallClick,
-            modifier = Modifier.size(38.dp).minimumInteractiveComponentSize().testTag("call_doctor_${doctor.id}"),
+            modifier = Modifier.size(40.dp).minimumInteractiveComponentSize().testTag("call_doctor_${doctor.id}"),
             shape = CircleShape,
             color = IndigoPrimary,
           ) {
@@ -516,12 +584,23 @@ fun RecommendDoctorCard(
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFF3F1F7)),
       ) {
-        Image(
-          painter = painterResource(doctor.avatarRes),
+        RealTimePortraitImage(
+          imageUrl = doctor.avatarUrl,
+          fallbackRes = doctor.avatarRes,
           contentDescription = doctor.name,
-          contentScale = ContentScale.Crop,
           modifier = Modifier.fillMaxSize(),
         )
+        if (doctor.isOnline) {
+          Box(
+            modifier =
+              Modifier.align(Alignment.TopEnd)
+                .padding(6.dp)
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(EmeraldLive)
+                .border(1.5.dp, Color.White, CircleShape),
+          )
+        }
       }
 
       Spacer(modifier = Modifier.width(14.dp))
@@ -563,17 +642,19 @@ fun RecommendDoctorCard(
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-          text = "${doctor.experienceYears} years experience",
+          text = "${doctor.experienceYears} years experience • ${doctor.nextAvailableSlot}",
           style = MaterialTheme.typography.bodySmall,
           color = SlateSecondary,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
         )
         Spacer(modifier = Modifier.height(10.dp))
         Button(
           onClick = onVisitNowClick,
-          modifier = Modifier.height(38.dp).testTag("visit_now_${doctor.id}"),
+          modifier = Modifier.height(40.dp).testTag("visit_now_${doctor.id}"),
           shape = RoundedCornerShape(50),
           colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary, contentColor = Color.White),
-          contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 22.dp, vertical = 0.dp),
+          contentPadding = PaddingValues(horizontal = 22.dp, vertical = 0.dp),
         ) {
           Text(
             text = stringResource(R.string.action_visit_now),
@@ -583,19 +664,4 @@ fun RecommendDoctorCard(
       }
     }
   }
-}
-
-@Composable
-fun AvatarCircle(
-  @DrawableRes avatarRes: Int,
-  contentDescription: String,
-  size: Dp,
-  modifier: Modifier = Modifier,
-) {
-  Image(
-    painter = painterResource(avatarRes),
-    contentDescription = contentDescription,
-    contentScale = ContentScale.Crop,
-    modifier = modifier.size(size).clip(CircleShape),
-  )
 }

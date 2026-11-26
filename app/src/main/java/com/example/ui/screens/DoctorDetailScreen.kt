@@ -84,10 +84,10 @@ fun DoctorDetailScreen(
         ) {
           Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-              Image(
-                painter = painterResource(doctor.avatarRes),
+              com.example.ui.components.RealTimePortraitImage(
+                imageUrl = doctor.avatarUrl,
+                fallbackRes = doctor.avatarRes,
                 contentDescription = doctor.name,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier.size(92.dp).clip(RoundedCornerShape(20.dp)),
               )
               Spacer(modifier = Modifier.width(14.dp))

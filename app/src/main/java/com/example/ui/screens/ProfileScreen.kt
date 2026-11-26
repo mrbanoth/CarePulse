@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -65,10 +68,11 @@ fun ProfileScreen(
 ) {
   val profile = uiState.homeProfile
   var appointmentRemindersEnabled by remember { mutableStateOf(true) }
+  val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
   LazyColumn(
     modifier = modifier.fillMaxSize().statusBarsPadding(),
-    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 108.dp),
+    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 104.dp + navBottomInset),
     verticalArrangement = Arrangement.spacedBy(16.dp),
   ) {
     item {
@@ -89,7 +93,8 @@ fun ProfileScreen(
         Column(modifier = Modifier.fillMaxWidth().padding(18.dp)) {
           Row(verticalAlignment = Alignment.CenterVertically) {
             AvatarCircle(
-              avatarRes = profile?.avatarRes ?: R.drawable.img_doc_male_neuro,
+              imageUrl = profile?.avatarUrl,
+              avatarRes = profile?.avatarRes ?: R.drawable.img_patient_avatar,
               contentDescription = profile?.displayName ?: "Siyam Ahamed",
               size = 64.dp,
             )

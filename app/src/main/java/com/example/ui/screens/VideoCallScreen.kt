@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,15 +47,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.components.AvatarCircle
 import com.example.ui.components.CircularWhiteIconButton
+import com.example.ui.components.RealTimePortraitImage
 import com.example.ui.state.VideoCallUiState
 import com.example.ui.theme.CoralRed
 import com.example.ui.theme.IndigoPrimary
@@ -76,7 +74,8 @@ fun VideoCallScreen(
   BackHandler { onEndCall() }
 
   val doctor = callState.doctor
-  val doctorPhoto = doctor?.avatarRes ?: R.drawable.img_doc_female_video
+  val doctorPhotoUrl = doctor?.avatarUrl
+  val doctorPhotoRes = doctor?.avatarRes ?: R.drawable.img_doc_female_video
 
   val infiniteTransition = rememberInfiniteTransition(label = "live_dot")
   val liveDotAlpha by
@@ -88,11 +87,11 @@ fun VideoCallScreen(
     )
 
   Box(modifier = modifier.fillMaxSize().background(Color(0xFF1A1927))) {
-    // Full-bleed doctor video feed
-    Image(
-      painter = painterResource(doctorPhoto),
+    // Full-bleed doctor video feed (using bundled high-res portrait + real-time overlay)
+    RealTimePortraitImage(
+      imageUrl = doctorPhotoUrl,
+      fallbackRes = doctorPhotoRes,
       contentDescription = doctor?.name ?: "Doctor video consultation",
-      contentScale = ContentScale.Crop,
       modifier = Modifier.fillMaxSize(),
     )
 
@@ -116,7 +115,7 @@ fun VideoCallScreen(
           .align(Alignment.BottomCenter)
           .background(
             Brush.verticalGradient(
-              colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.48f))
+              colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.52f))
             )
           ),
     )
@@ -149,10 +148,10 @@ fun VideoCallScreen(
         contentAlignment = Alignment.Center,
       ) {
         if (callState.isCameraOn) {
-          Image(
-            painter = painterResource(R.drawable.img_patient_avatar),
+          RealTimePortraitImage(
+            imageUrl = "https://randomuser.me/api/portraits/women/44.jpg",
+            fallbackRes = R.drawable.img_patient_avatar,
             contentDescription = "Your camera preview",
-            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
           )
         } else {
@@ -180,7 +179,7 @@ fun VideoCallScreen(
         Modifier.fillMaxWidth()
           .align(Alignment.BottomCenter)
           .navigationBarsPadding()
-          .padding(horizontal = 20.dp, vertical = 20.dp),
+          .padding(horizontal = 20.dp, vertical = 22.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       if (callState.isScreenShared || callState.isMuted) {
@@ -232,7 +231,8 @@ fun VideoCallScreen(
           verticalAlignment = Alignment.CenterVertically,
         ) {
           AvatarCircle(
-            avatarRes = doctorPhoto,
+            imageUrl = doctorPhotoUrl,
+            avatarRes = doctorPhotoRes,
             contentDescription = doctor?.name ?: "Doctor",
             size = 46.dp,
           )

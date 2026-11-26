@@ -248,9 +248,9 @@ fun CarePulseApp(
         }
 
         // Bottom Nav Bar for Compact / Phone Layouts
-        if (!isExpandedScreen && isTopLevelRoute) {
+        if (!isExpandedScreen && activeTopTab != null) {
           FloatingBottomNavBar(
-            selectedTab = activeTopTab!!,
+            selectedTab = activeTopTab,
             onSelectTab = navigateToTab,
             modifier = Modifier.align(Alignment.BottomCenter).widthIn(max = 600.dp),
           )

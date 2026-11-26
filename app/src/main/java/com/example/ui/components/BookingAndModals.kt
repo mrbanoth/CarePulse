@@ -101,7 +101,12 @@ fun BookingBottomSheet(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
       ) {
-        AvatarCircle(avatarRes = doctor.avatarRes, contentDescription = doctor.name, size = 54.dp)
+        AvatarCircle(
+          imageUrl = doctor.avatarUrl,
+          avatarRes = doctor.avatarRes,
+          contentDescription = doctor.name,
+          size = 54.dp,
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
           Text(
@@ -429,7 +434,12 @@ fun AppointmentDetailSheet(
   ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
       Row(verticalAlignment = Alignment.CenterVertically) {
-        AvatarCircle(appointment.doctorAvatarRes, appointment.doctorName, 54.dp)
+        AvatarCircle(
+          imageUrl = appointment.doctorAvatarUrl,
+          avatarRes = appointment.doctorAvatarRes,
+          contentDescription = appointment.doctorName,
+          size = 54.dp,
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column {
           Text(

@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Local real-time mock data engine stored in data/mock/ (no backend required).
- * Simulates live doctor online pulses, clinic wait-time updates, real-time notifications,
- * and immediate reactive mutations across all screens.
+ * Provides real-time image URLs (with bundled drawable fallbacks), live doctor status updates,
+ * clinic wait-time ticks, treatment progress updates, and instant reactive mutations.
  */
 object MockRealTimeDataSource {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -63,7 +63,8 @@ object MockRealTimeDataSource {
         heightLabel = "Height: 5.9\"",
         bloodType = "O+",
         isPro = true,
-        avatarRes = R.drawable.img_doc_male_neuro,
+        avatarUrl = "https://randomuser.me/api/portraits/men/32.jpg",
+        avatarRes = R.drawable.img_patient_avatar,
         treatmentPlans =
           listOf(
             TreatmentPlan(
@@ -100,6 +101,7 @@ object MockRealTimeDataSource {
         heightLabel = "Height: 5.4\"",
         bloodType = "A+",
         isPro = true,
+        avatarUrl = "https://randomuser.me/api/portraits/women/44.jpg",
         avatarRes = R.drawable.img_patient_avatar,
         treatmentPlans =
           listOf(
@@ -145,6 +147,7 @@ object MockRealTimeDataSource {
         consultationFeeUsd = 65,
         bio =
           "Board-certified orthopedic specialist focusing on sports injuries, foot & ankle rehabilitation, and minimally invasive joint care.",
+        avatarUrl = "https://randomuser.me/api/portraits/women/65.jpg",
         avatarRes = R.drawable.img_doc_female_video,
         isOnline = true,
         nextAvailableSlot = "Today, 02:30 PM",
@@ -164,6 +167,7 @@ object MockRealTimeDataSource {
         consultationFeeUsd = 75,
         bio =
           "Neurologist specializing in migraine management, nerve conduction diagnostics, and preventive cognitive wellness.",
+        avatarUrl = "https://randomuser.me/api/portraits/men/46.jpg",
         avatarRes = R.drawable.img_doc_male_neuro,
         isOnline = true,
         nextAvailableSlot = "Today, 04:00 PM",
@@ -183,6 +187,7 @@ object MockRealTimeDataSource {
         consultationFeeUsd = 70,
         bio =
           "Pulmonary care physician dedicated to asthma control, sleep-related breathing disorders, and respiratory recovery.",
+        avatarUrl = "https://randomuser.me/api/portraits/men/75.jpg",
         avatarRes = R.drawable.img_doc_male_pulmo,
         isOnline = true,
         nextAvailableSlot = "Tomorrow, 09:30 AM",
@@ -202,6 +207,7 @@ object MockRealTimeDataSource {
         consultationFeeUsd = 60,
         bio =
           "Foot and ankle care clinician offering live gait assessments, diabetic foot care, and custom orthotic consultations.",
+        avatarUrl = "https://randomuser.me/api/portraits/women/68.jpg",
         avatarRes = R.drawable.img_doc_female_video,
         isOnline = true,
         nextAvailableSlot = "Online Now",
@@ -221,8 +227,9 @@ object MockRealTimeDataSource {
         consultationFeeUsd = 85,
         bio =
           "Preventive cardiologist focused on hypertension management, ECG interpretation, and heart-healthy lifestyle coaching.",
+        avatarUrl = "https://randomuser.me/api/portraits/men/52.jpg",
         avatarRes = R.drawable.img_doc_male_pulmo,
-        isOnline = false,
+        isOnline = true,
         nextAvailableSlot = "Sep 12, 11:00 AM",
         availableTimeSlots = listOf("09:00 AM", "11:00 AM", "03:00 PM"),
         isRecentVisit = false,
@@ -250,7 +257,9 @@ object MockRealTimeDataSource {
           dateLabel = "Wed, 7 Sep 2024",
           timeRange = "10:30 - 11:30 AM",
           type = ConsultationType.CLINIC,
+          doctorAvatarUrl = "https://randomuser.me/api/portraits/women/65.jpg",
           doctorAvatarRes = R.drawable.img_doc_female_video,
+          liveStatusLabel = "Room Ready",
         )
       )
     )
@@ -266,6 +275,7 @@ object MockRealTimeDataSource {
           title = "Clinic Visit\nAppointment",
           doctorId = "doc_jennifer",
           doctorShortName = "Dr. Jennifer",
+          doctorAvatarUrl = "https://randomuser.me/api/portraits/women/65.jpg",
           doctorAvatarRes = R.drawable.img_doc_female_video,
           type = ConsultationType.CLINIC,
           location = "St. Jude Orthopedic Center, Room 304",
@@ -278,6 +288,7 @@ object MockRealTimeDataSource {
           title = "Video\nConsulting",
           doctorId = "doc_jaffaer",
           doctorShortName = "Dr. Jaffaer",
+          doctorAvatarUrl = "https://randomuser.me/api/portraits/men/52.jpg",
           doctorAvatarRes = R.drawable.img_doc_male_pulmo,
           type = ConsultationType.VIDEO,
           location = "HD Telehealth Video Room",
@@ -390,11 +401,11 @@ object MockRealTimeDataSource {
   val liveSyncTick: StateFlow<Long> = _liveSyncTick.asStateFlow()
 
   init {
-    // Simulates real-time background pulse for clinic wait times & live doctor presence
+    // Simulates real-time background sync for clinic wait times, doctor availability & appointment status
     scope.launch {
       var tick = 0L
       while (true) {
-        delay(10_000L)
+        delay(8_000L)
         tick++
         _liveSyncTick.value = tick
         _clinics.update { list ->
@@ -406,10 +417,13 @@ object MockRealTimeDataSource {
         }
         _doctors.update { list ->
           list.map { doc ->
-            if (doc.id == "doc_jaffaer") {
-              doc.copy(isOnline = tick % 2L == 1L)
-            } else {
-              doc
+            when (doc.id) {
+              "doc_jaffaer" -> doc.copy(isOnline = tick % 2L == 1L)
+              "doc_warner" ->
+                doc.copy(
+                  nextAvailableSlot = if (tick % 2L == 0L) "Today, 04:00 PM" else "In 15 mins"
+                )
+              else -> doc
             }
           }
         }
@@ -434,7 +448,9 @@ object MockRealTimeDataSource {
         dateLabel = dateLabel,
         timeRange = timeSlot,
         type = type,
+        doctorAvatarUrl = doctor.avatarUrl,
         doctorAvatarRes = doctor.avatarRes,
+        liveStatusLabel = if (type == ConsultationType.VIDEO) "Video Ready" else "Confirmed",
       )
     _appointments.update { current -> listOf(newAppointment) + current }
 
@@ -449,6 +465,7 @@ object MockRealTimeDataSource {
           else "Video\nConsulting",
         doctorId = doctor.id,
         doctorShortName = shortName,
+        doctorAvatarUrl = doctor.avatarUrl,
         doctorAvatarRes = doctor.avatarRes,
         type = type,
         location = if (type == ConsultationType.CLINIC) doctor.hospitalName else "HD Telehealth Video Room",
@@ -470,9 +487,30 @@ object MockRealTimeDataSource {
   }
 
   fun togglePrescriptionTaken(prescriptionId: String) {
+    var toggledName = ""
+    var nowTaken = false
     _prescriptions.update { list ->
       list.map { item ->
-        if (item.id == prescriptionId) item.copy(isTakenToday = !item.isTakenToday) else item
+        if (item.id == prescriptionId) {
+          toggledName = item.name
+          nowTaken = !item.isTakenToday
+          item.copy(isTakenToday = nowTaken)
+        } else {
+          item
+        }
+      }
+    }
+    if (nowTaken && toggledName.isNotEmpty()) {
+      _notifications.update { current ->
+        listOf(
+          AppNotification(
+            id = "not_${System.currentTimeMillis()}",
+            title = "Dose Logged",
+            body = "Recorded today's dose for $toggledName.",
+            timeAgo = "Just now",
+            isUnread = true,
+          )
+        ) + current
       }
     }
   }
@@ -504,10 +542,29 @@ object MockRealTimeDataSource {
   }
 
   fun toggleCheckupCompleted(checkupId: String) {
+    var completedNow = false
     _checkupSchedules.update { list ->
       list.map { item ->
-        if (item.id == checkupId) item.copy(isCompleted = !item.isCompleted) else item
+        if (item.id == checkupId) {
+          completedNow = !item.isCompleted
+          item.copy(isCompleted = completedNow)
+        } else {
+          item
+        }
       }
+    }
+    // Real-time feedback: completing a checkup advances the active patient's first treatment plan
+    _treatmentPatient.update { patient ->
+      val delta = if (completedNow) 0.12f else -0.12f
+      val updatedPlans =
+        patient.treatmentPlans.mapIndexed { idx, plan ->
+          if (idx == 0) {
+            plan.copy(progressPercent = (plan.progressPercent + delta).coerceIn(0.1f, 1.0f))
+          } else {
+            plan
+          }
+        }
+      patient.copy(treatmentPlans = updatedPlans)
     }
   }
 

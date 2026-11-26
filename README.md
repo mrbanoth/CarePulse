@@ -75,18 +75,18 @@ CarePulse Doctor uses a cohesive, calm clinical palette anchored on an alabaster
 
 ## Architecture & Mock Real-Time Data Folder
 
-The app follows **MVVM + Repository** architecture using Kotlin Coroutines and `StateFlow`, powered locally with zero backend dependencies:
+The app follows **MVVM + Repository** architecture using Kotlin Coroutines, `StateFlow`, and **Coil** (`RealTimePortraitImage`) for live portrait image loading with instant bundled drawable fallbacks—requiring zero backend services:
 
 ```text
 app/src/main/java/com/example/
 ├── data/
 │   ├── mock/                         # Dedicated real-time mock data folder
-│   │   ├── MockModels.kt             # Domain models (Doctor, Appointment, Checkup, etc.)
-│   │   └── MockRealTimeDataSource.kt # Reactive StateFlows, 10s live sync pulse & mutations
+│   │   ├── MockModels.kt             # Domain models with real-time image URLs & statuses
+│   │   └── MockRealTimeDataSource.kt # Reactive StateFlows, 8s live sync pulse & mutations
 │   └── repository/
 │       └── DoctorRepository.kt       # Clean stream & action abstraction over mock source
 └── ui/
-    ├── components/                   # FloatingBottomNavBar, vector icons, Booking & modal sheets
+    ├── components/                   # Edge-to-edge FloatingBottomNavBar, Coil portraits & sheets
     ├── navigation/                   # CarePulseApp NavHost + adaptive NavigationRail
     ├── screens/                      # All 8 Compose screens
     ├── state/                        # DoctorAppViewModel & VideoCallUiState timer
